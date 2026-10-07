@@ -1,0 +1,62 @@
+[build-system]
+requires = ["setuptools>=61.0.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "persian-md2pdf"
+version = "1.0.0"
+description = "Professional tool and Python library for converting Persian and RTL Markdown documents to PDF with KaTeX math and elegant typography."
+readme = "README.md"
+requires-python = ">=3.8"
+license = { text = "MIT" }
+authors = [
+    { name = "TeleEng" }
+]
+keywords = [
+    "persian",
+    "farsi",
+    "markdown",
+    "pdf",
+    "rtl",
+    "katex",
+    "latex",
+    "math",
+    "report",
+    "generator",
+    "vazirmatn",
+    "converter"
+]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Education",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Topic :: Documentation",
+    "Topic :: Text Processing :: Markup :: Markdown",
+    "Topic :: Software Development :: Documentation",
+]
+dependencies = [
+    "markdown>=3.5",
+]
+
+[project.urls]
+Homepage = "https://github.com/TeleEng/Persian-md2pdf"
+Repository = "https://github.com/TeleEng/Persian-md2pdf.git"
+Issues = "https://github.com/TeleEng/Persian-md2pdf/issues"
+
+[project.scripts]
+persian-md2pdf = "persian_md2pdf.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["persian_md2pdf*"]
