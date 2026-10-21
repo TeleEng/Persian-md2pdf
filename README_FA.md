@@ -103,6 +103,7 @@ persian-md2pdf ./docs/ -o ./output/ --english
 | `--margins` | | فواصل حاشیه صفحه (بالا راست پایین چپ) | `20mm 15mm 20mm 15mm` |
 | `--no-mermaid` | | غیرفعال‌سازی پردازش نمودارهای Mermaid | `غیرفعال` (Mermaid فعال) |
 | `--mermaid-font-size` | | تنظیم اندازه قلم متن نمودارها (مانند `10px`, `11px`, `9pt`) | `11.5px` (انگلیسی) / `12px` (فارسی) |
+| `--mermaid-font` | | نام فونت اختصاصی نمودارها (مانند `Fira Code`, `Tahoma`) | فونت اصلی متن |
 | `--mermaid-theme` | | قالب ظاهری نمودارهای Mermaid (`default`, `neutral`, `forest`, `dark`, `base`) | `default` |
 | `--no-katex` | | غیرفعال‌سازی پردازش فرمول‌های ریاضی | `غیرفعال` (KaTeX فعال) |
 | `--persian-numbers` | | تبدیل اعداد 0 تا 9 متن به ارقام فارسی ۰ تا ۹ | `غیرفعال` |

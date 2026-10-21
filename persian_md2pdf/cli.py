@@ -129,6 +129,7 @@ def process_inputs(inputs: List[str], args, verbose: bool = True):
                 katex=not args.no_katex,
                 mermaid=not args.no_mermaid,
                 mermaid_font_size=args.mermaid_font_size,
+                mermaid_font=args.mermaid_font,
                 mermaid_theme=args.mermaid_theme,
                 english=args.english,
                 custom_css=args.css,
@@ -161,6 +162,7 @@ def process_inputs(inputs: List[str], args, verbose: bool = True):
                     katex=not args.no_katex,
                     mermaid=not args.no_mermaid,
                     mermaid_font_size=args.mermaid_font_size,
+                    mermaid_font=args.mermaid_font,
                     mermaid_theme=args.mermaid_theme,
                     english=args.english,
                     custom_css=args.css,
@@ -187,6 +189,7 @@ def process_inputs(inputs: List[str], args, verbose: bool = True):
                     katex=not args.no_katex,
                     mermaid=not args.no_mermaid,
                     mermaid_font_size=args.mermaid_font_size,
+                    mermaid_font=args.mermaid_font,
                     mermaid_theme=args.mermaid_theme,
                     english=args.english,
                     custom_css=args.css,
@@ -274,6 +277,11 @@ Examples / نمونه‌های استفاده:
         "--mermaid-font-size",
         default=None,
         help="Custom font size for Mermaid diagrams, e.g. 10px, 11px, 9pt / اندازه قلم نمودارهای Mermaid",
+    )
+    parser.add_argument(
+        "--mermaid-font",
+        default=None,
+        help="Custom font family for Mermaid diagrams (e.g. 'Fira Code', 'Courier New', 'Tahoma') / قلم نمودارهای Mermaid",
     )
     parser.add_argument(
         "--mermaid-theme",

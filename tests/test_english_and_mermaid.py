@@ -70,16 +70,20 @@ graph LR
 
     def test_mermaid_font_size_customization(self):
         md = "```mermaid\ngraph LR\nA-->B\n```"
-        html = md_to_html(md, english=True, mermaid_font_size="9px", mermaid_theme="neutral")
+        html = md_to_html(md, english=True, mermaid_font_size="9px", mermaid_font="Fira Code", mermaid_theme="neutral")
         self.assertIn("--mermaid-font-size: 9px", html)
+        self.assertIn("--mermaid-font-family: 'Fira Code', sans-serif", html)
         self.assertIn("fontSize: '9px'", html)
+        self.assertIn("fontFamily: ''Fira Code', sans-serif'", html)
         self.assertIn("theme: 'neutral'", html)
 
     def test_mermaid_frontmatter_configuration(self):
-        md = "---\nmermaid_font_size: 10px\nmermaid_theme: forest\n---\n```mermaid\ngraph LR\nA-->B\n```"
+        md = "---\nmermaid_font_size: 10px\nmermaid_font: JetBrains Mono\nmermaid_theme: forest\n---\n```mermaid\ngraph LR\nA-->B\n```"
         html = md_to_html(md, english=True)
         self.assertIn("--mermaid-font-size: 10px", html)
+        self.assertIn("--mermaid-font-family: 'JetBrains Mono', sans-serif", html)
         self.assertIn("fontSize: '10px'", html)
+        self.assertIn("fontFamily: ''JetBrains Mono', sans-serif'", html)
         self.assertIn("theme: 'forest'", html)
 
     def test_cli_english_flag(self):
@@ -89,6 +93,7 @@ graph LR
         self.assertIn("--english", res.stdout)
         self.assertIn("--no-mermaid", res.stdout)
         self.assertIn("--mermaid-font-size", res.stdout)
+        self.assertIn("--mermaid-font", res.stdout)
         self.assertIn("--mermaid-theme", res.stdout)
 
     def test_end_to_end_english_compilation(self):

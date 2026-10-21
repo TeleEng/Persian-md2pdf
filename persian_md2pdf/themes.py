@@ -112,6 +112,7 @@ def get_theme_css(
     page_numbering: bool = True,
     english: bool = False,
     mermaid_font_size: Optional[str] = None,
+    mermaid_font: Optional[str] = None,
     custom_css: Optional[str] = None,
 ) -> str:
     """
@@ -122,6 +123,13 @@ def get_theme_css(
 
     if not mermaid_font_size:
         mermaid_font_size = "11.5px" if english else "12px"
+
+    if not mermaid_font:
+        mermaid_font_family = "'Inter', system-ui, sans-serif" if english else "'Vazirmatn', 'Segoe UI', Tahoma, sans-serif"
+    elif "," in mermaid_font or mermaid_font.startswith("'") or mermaid_font.startswith('"'):
+        mermaid_font_family = mermaid_font
+    else:
+        mermaid_font_family = f"'{mermaid_font}', sans-serif"
 
     # Determine fonts based on language
     if english:
@@ -370,6 +378,7 @@ img {{
 /* Mermaid Diagrams */
 :root {{
     --mermaid-font-size: {mermaid_font_size};
+    --mermaid-font-family: {mermaid_font_family};
 }}
 
 .mermaid {{
@@ -381,15 +390,17 @@ img {{
     page-break-inside: avoid;
     break-inside: avoid;
     font-size: var(--mermaid-font-size);
+    font-family: var(--mermaid-font-family);
 }}
 
 .mermaid svg {{
     max-width: 100% !important;
     height: auto !important;
     box-sizing: border-box;
+    font-family: var(--mermaid-font-family);
 }}
 
-/* Scale font inside Mermaid diagram nodes, labels, and text */
+/* Scale font and enforce font family inside Mermaid diagram nodes, labels, and text */
 .mermaid .node,
 .mermaid .node foreignObject div,
 .mermaid .node foreignObject span,
@@ -401,6 +412,7 @@ img {{
 .mermaid .actor,
 .mermaid .messageText,
 .mermaid .noteText {{
+    font-family: var(--mermaid-font-family) !important;
     font-size: var(--mermaid-font-size) !important;
     line-height: 1.35 !important;
 }}

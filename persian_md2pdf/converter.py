@@ -211,6 +211,7 @@ def md_to_html(
     katex: bool = True,
     mermaid: bool = True,
     mermaid_font_size: Optional[str] = None,
+    mermaid_font: Optional[str] = None,
     mermaid_theme: str = "default",
     english: bool = False,
     custom_css: Optional[str] = None,
@@ -317,6 +318,9 @@ def md_to_html(
     if not mermaid_font_size:
         mermaid_font_size = "11.5px" if english else "12px"
 
+    if not mermaid_font:
+        mermaid_font = frontmatter.get("mermaid_font", frontmatter.get("mermaid-font"))
+
     if mermaid_theme == "default" and ("mermaid_theme" in frontmatter or "mermaid-theme" in frontmatter):
         mermaid_theme = frontmatter.get("mermaid_theme", frontmatter.get("mermaid-theme", "default"))
 
@@ -329,6 +333,7 @@ def md_to_html(
         page_numbering=True,
         english=english,
         mermaid_font_size=mermaid_font_size,
+        mermaid_font=mermaid_font,
         custom_css=custom_css,
     )
 
@@ -351,7 +356,10 @@ def md_to_html(
 
     # 10. Mermaid Scripts Injection
     mermaid_scripts = ""
-    diagram_font = "Inter, system-ui, sans-serif" if english else "Vazirmatn, Tahoma, sans-serif"
+    if mermaid_font:
+        diagram_font = mermaid_font if ("," in mermaid_font or mermaid_font.startswith("'") or mermaid_font.startswith('"')) else f"'{mermaid_font}', sans-serif"
+    else:
+        diagram_font = "Inter, system-ui, sans-serif" if english else "Vazirmatn, Tahoma, sans-serif"
     if mermaid and (mermaid_map or "class=\"mermaid\"" in html_body):
         mermaid_scripts = f"""
 <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
