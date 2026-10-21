@@ -111,6 +111,7 @@ def get_theme_css(
     margins: str = "20mm 15mm 20mm 15mm",
     page_numbering: bool = True,
     english: bool = False,
+    mermaid_font_size: Optional[str] = None,
     custom_css: Optional[str] = None,
 ) -> str:
     """
@@ -118,6 +119,9 @@ def get_theme_css(
     typography, KaTeX, Callouts, Mermaid diagrams, and print styles.
     """
     palette = THEME_PALETTES.get(theme_name.lower(), THEME_PALETTES["modern"])
+
+    if not mermaid_font_size:
+        mermaid_font_size = "11.5px" if english else "12px"
 
     # Determine fonts based on language
     if english:
@@ -364,6 +368,10 @@ img {{
 }}
 
 /* Mermaid Diagrams */
+:root {{
+    --mermaid-font-size: {mermaid_font_size};
+}}
+
 .mermaid {{
     direction: ltr !important;
     text-align: center;
@@ -372,12 +380,29 @@ img {{
     justify-content: center;
     page-break-inside: avoid;
     break-inside: avoid;
+    font-size: var(--mermaid-font-size);
 }}
 
 .mermaid svg {{
     max-width: 100% !important;
     height: auto !important;
     box-sizing: border-box;
+}}
+
+/* Scale font inside Mermaid diagram nodes, labels, and text */
+.mermaid .node,
+.mermaid .node foreignObject div,
+.mermaid .node foreignObject span,
+.mermaid .label,
+.mermaid .label foreignObject,
+.mermaid .cluster-label,
+.mermaid .edgeLabel,
+.mermaid text,
+.mermaid .actor,
+.mermaid .messageText,
+.mermaid .noteText {{
+    font-size: var(--mermaid-font-size) !important;
+    line-height: 1.35 !important;
 }}
 
 /* Callouts / Admonitions */

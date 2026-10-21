@@ -181,6 +181,8 @@ def md_to_html(
     persian_numbers: bool = False,
     katex: bool = True,
     mermaid: bool = True,
+    mermaid_font_size: Optional[str] = None,
+    mermaid_theme: str = "default",
     english: bool = False,
     custom_css: Optional[str] = None,
 ) -> str:
@@ -276,6 +278,15 @@ def md_to_html(
         # If user explicitly forced persian numbers on english
         html_body = to_persian_numbers(html_body)
 
+    # Check frontmatter for mermaid overrides
+    if not mermaid_font_size:
+        mermaid_font_size = frontmatter.get("mermaid_font_size", frontmatter.get("mermaid-font-size"))
+    if not mermaid_font_size:
+        mermaid_font_size = "11.5px" if english else "12px"
+
+    if mermaid_theme == "default" and ("mermaid_theme" in frontmatter or "mermaid-theme" in frontmatter):
+        mermaid_theme = frontmatter.get("mermaid_theme", frontmatter.get("mermaid-theme", "default"))
+
     # 8. Generate Theme Stylesheet
     theme_css = get_theme_css(
         theme_name=theme,
@@ -284,6 +295,7 @@ def md_to_html(
         margins=margins,
         page_numbering=True,
         english=english,
+        mermaid_font_size=mermaid_font_size,
         custom_css=custom_css,
     )
 
@@ -306,21 +318,35 @@ def md_to_html(
 
     # 10. Mermaid Scripts Injection
     mermaid_scripts = ""
+    diagram_font = "Inter, system-ui, sans-serif" if english else "Vazirmatn, Tahoma, sans-serif"
     if mermaid and (mermaid_map or "class=\"mermaid\"" in html_body):
-        mermaid_scripts = """
+        mermaid_scripts = f"""
 <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
 <script>
-    document.addEventListener("DOMContentLoaded", function() {
-        try {
-            mermaid.initialize({
+    document.addEventListener("DOMContentLoaded", function() {{
+        try {{
+            mermaid.initialize({{
                 startOnLoad: true,
-                theme: 'default',
-                securityLevel: 'loose'
-            });
-        } catch(e) {
+                theme: '{mermaid_theme}',
+                securityLevel: 'loose',
+                themeVariables: {{
+                    fontSize: '{mermaid_font_size}',
+                    fontFamily: '{diagram_font}'
+                }},
+                flowchart: {{
+                    useMaxWidth: true,
+                    htmlLabels: true
+                }},
+                sequence: {{
+                    actorFontSize: '{mermaid_font_size}',
+                    messageFontSize: '{mermaid_font_size}',
+                    noteFontSize: '{mermaid_font_size}'
+                }}
+            }});
+        }} catch(e) {{
             console.error('Mermaid initialization error:', e);
-        }
-    });
+        }}
+    }});
 </script>
 """
 

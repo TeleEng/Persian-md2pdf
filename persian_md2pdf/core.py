@@ -22,6 +22,8 @@ def compile_file(
     persian_numbers: bool = False,
     katex: bool = True,
     mermaid: bool = True,
+    mermaid_font_size: Optional[str] = None,
+    mermaid_theme: str = "default",
     english: bool = False,
     custom_css: Optional[str] = None,
     browser_path: Optional[str] = None,
@@ -81,6 +83,8 @@ def compile_file(
         persian_numbers=persian_numbers,
         katex=katex,
         mermaid=mermaid,
+        mermaid_font_size=mermaid_font_size,
+        mermaid_theme=mermaid_theme,
         english=english,
         custom_css=custom_css,
     )
@@ -140,6 +144,8 @@ def md2html(
     persian_numbers: bool = False,
     katex: bool = True,
     mermaid: bool = True,
+    mermaid_font_size: Optional[str] = None,
+    mermaid_theme: str = "default",
     english: bool = False,
     custom_css: Optional[str] = None,
 ) -> str:
@@ -174,6 +180,8 @@ def md2html(
         persian_numbers=persian_numbers,
         katex=katex,
         mermaid=mermaid,
+        mermaid_font_size=mermaid_font_size,
+        mermaid_theme=mermaid_theme,
         english=english,
         custom_css=custom_css,
     )

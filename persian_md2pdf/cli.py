@@ -128,6 +128,8 @@ def process_inputs(inputs: List[str], args, verbose: bool = True):
                 persian_numbers=args.persian_numbers,
                 katex=not args.no_katex,
                 mermaid=not args.no_mermaid,
+                mermaid_font_size=args.mermaid_font_size,
+                mermaid_theme=args.mermaid_theme,
                 english=args.english,
                 custom_css=args.css,
                 browser_path=args.browser,
@@ -158,6 +160,8 @@ def process_inputs(inputs: List[str], args, verbose: bool = True):
                     persian_numbers=args.persian_numbers,
                     katex=not args.no_katex,
                     mermaid=not args.no_mermaid,
+                    mermaid_font_size=args.mermaid_font_size,
+                    mermaid_theme=args.mermaid_theme,
                     english=args.english,
                     custom_css=args.css,
                 )
@@ -182,6 +186,8 @@ def process_inputs(inputs: List[str], args, verbose: bool = True):
                     persian_numbers=args.persian_numbers,
                     katex=not args.no_katex,
                     mermaid=not args.no_mermaid,
+                    mermaid_font_size=args.mermaid_font_size,
+                    mermaid_theme=args.mermaid_theme,
                     english=args.english,
                     custom_css=args.css,
                     browser_path=args.browser,
@@ -263,6 +269,17 @@ Examples / نمونه‌های استفاده:
         "--no-mermaid",
         action="store_true",
         help="Disable Mermaid diagram rendering / غیرفعال‌سازی نمودارهای Mermaid",
+    )
+    parser.add_argument(
+        "--mermaid-font-size",
+        default=None,
+        help="Custom font size for Mermaid diagrams, e.g. 10px, 11px, 9pt / اندازه قلم نمودارهای Mermaid",
+    )
+    parser.add_argument(
+        "--mermaid-theme",
+        default="default",
+        choices=["default", "neutral", "forest", "dark", "base"],
+        help="Theme for Mermaid diagrams (default, neutral, forest, dark, base) / قالب نمودارهای Mermaid",
     )
     parser.add_argument(
         "--html-only",

@@ -103,6 +103,8 @@ persian-md2pdf report.md --css custom_style.css
 | `--page-size` | | Page size (`A4`, `Letter`, etc.) | `A4` |
 | `--margins` | | Page margins (`top right bottom left`) | `20mm 15mm 20mm 15mm` |
 | `--no-mermaid` | | Disable Mermaid diagram rendering | `False` (Mermaid enabled) |
+| `--mermaid-font-size` | | Custom font size for diagrams (e.g. `10px`, `11px`, `9pt`) | `11.5px` (en) / `12px` (fa) |
+| `--mermaid-theme` | | Mermaid theme (`default`, `neutral`, `forest`, `dark`, `base`) | `default` |
 | `--no-katex` | | Disable KaTeX math parsing | `False` (KaTeX enabled) |
 | `--persian-numbers` | | Convert digits 0-9 to Persian digits ۰-۹ | `False` |
 | `--html-only` | | Generate only HTML output | `False` |
@@ -167,6 +169,30 @@ graph TD
 ````
 
 Diagrams are rendered into vector SVG elements centered and scaled to fit the printable area.
+
+### Controlling Diagram Font Size:
+You can easily adjust font sizes for large or complex diagrams through three convenient methods:
+
+1. **CLI Flag**:
+   ```bash
+   persian-md2pdf doc.md --english --mermaid-font-size 10px
+   ```
+2. **YAML Frontmatter** (per-document):
+   ```yaml
+   ---
+   title: System Design
+   mermaid_font_size: 9.5px
+   mermaid_theme: neutral
+   ---
+   ```
+3. **In-Diagram Directive** (per-diagram):
+   ````markdown
+   ```mermaid
+   %%{init: {'themeVariables': {'fontSize': '9px'}}}%%
+   graph TD
+       A --> B
+   ```
+   ````
 
 ---
 

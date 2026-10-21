@@ -68,12 +68,28 @@ graph LR
         self.assertIn('<div class="mermaid">', html)
         self.assertIn("mermaid.min.js", html)
 
+    def test_mermaid_font_size_customization(self):
+        md = "```mermaid\ngraph LR\nA-->B\n```"
+        html = md_to_html(md, english=True, mermaid_font_size="9px", mermaid_theme="neutral")
+        self.assertIn("--mermaid-font-size: 9px", html)
+        self.assertIn("fontSize: '9px'", html)
+        self.assertIn("theme: 'neutral'", html)
+
+    def test_mermaid_frontmatter_configuration(self):
+        md = "---\nmermaid_font_size: 10px\nmermaid_theme: forest\n---\n```mermaid\ngraph LR\nA-->B\n```"
+        html = md_to_html(md, english=True)
+        self.assertIn("--mermaid-font-size: 10px", html)
+        self.assertIn("fontSize: '10px'", html)
+        self.assertIn("theme: 'forest'", html)
+
     def test_cli_english_flag(self):
         cmd = [sys.executable, "-m", "persian_md2pdf.cli", "--help"]
         res = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8")
         self.assertEqual(res.returncode, 0)
         self.assertIn("--english", res.stdout)
         self.assertIn("--no-mermaid", res.stdout)
+        self.assertIn("--mermaid-font-size", res.stdout)
+        self.assertIn("--mermaid-theme", res.stdout)
 
     def test_end_to_end_english_compilation(self):
         with tempfile.NamedTemporaryFile(suffix=".md", delete=False, mode="w", encoding="utf-8") as f:

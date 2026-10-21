@@ -127,6 +127,8 @@ def render_html_to_pdf(
         browser_exe,
         "--headless",
         "--disable-gpu",
+        "--no-sandbox",
+        "--disable-dev-shm-usage",
         "--no-pdf-header-footer",
         "--run-all-compositor-stages-before-draw",
         f"--virtual-time-budget={virtual_time_budget}",
