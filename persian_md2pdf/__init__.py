@@ -1,8 +1,9 @@
 """
-persian_md2pdf: Convert Persian & RTL Markdown documents to professional PDFs.
+persian_md2pdf: Convert Persian RTL & English LTR Markdown documents to professional PDFs
+with LaTeX math (KaTeX) and Mermaid diagram support.
 """
 
-__version__ = "1.0.0"
+__version__ = "1.1.0"
 __author__ = "TeleEng"
 
 from .browser import find_browser, render_html_to_pdf

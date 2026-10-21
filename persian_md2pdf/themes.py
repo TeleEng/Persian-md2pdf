@@ -1,6 +1,7 @@
 """
-Themes and CSS generator for Persian RTL Markdown to PDF conversion.
-Provides modern, academic, minimal, and github themes with full RTL & Paged Media support.
+Themes and CSS generator for Persian RTL and English LTR Markdown to PDF conversion.
+Provides modern, academic, minimal, and github themes with full RTL/LTR & Paged Media support,
+along with KaTeX math and Mermaid diagram styling.
 """
 
 from typing import Optional, Dict
@@ -105,36 +106,63 @@ THEME_PALETTES: Dict[str, Dict[str, str]] = {
 
 def get_theme_css(
     theme_name: str = "modern",
-    font_family: str = "Vazirmatn",
+    font_family: Optional[str] = None,
     page_size: str = "A4",
     margins: str = "20mm 15mm 20mm 15mm",
     page_numbering: bool = True,
+    english: bool = False,
     custom_css: Optional[str] = None,
 ) -> str:
     """
-    Constructs the complete CSS string for a chosen theme with RTL layout,
-    typography, KaTeX, Callouts, and print styles.
+    Constructs the complete CSS string for a chosen theme with RTL/LTR layout,
+    typography, KaTeX, Callouts, Mermaid diagrams, and print styles.
     """
     palette = THEME_PALETTES.get(theme_name.lower(), THEME_PALETTES["modern"])
 
-    # Fallback Persian font stack
-    font_stack = f"'{font_family}', 'Shabnam', 'Sahel', 'B Nazanin', 'Segoe UI', Tahoma, Arial, sans-serif"
+    # Determine fonts based on language
+    if english:
+        active_font = font_family if font_family and font_family != "Vazirmatn" else "Inter"
+        font_stack = f"'{active_font}', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif"
+    else:
+        active_font = font_family or "Vazirmatn"
+        font_stack = f"'{active_font}', 'Shabnam', 'Sahel', 'B Nazanin', 'Segoe UI', Tahoma, Arial, sans-serif"
+
     code_font_stack = "'JetBrains Mono', 'Fira Code', 'Consolas', 'Courier New', monospace"
 
     page_counter_css = ""
     if page_numbering:
+        page_label = 'content: "Page " counter(page);' if english else 'content: "صفحه " counter(page);'
         page_counter_css = f"""
     @bottom-center {{
-        content: "صفحه " counter(page);
+        {page_label}
         font-family: {font_stack};
         font-size: 8.5pt;
         color: {palette['footer_color']};
     }}
 """
 
+    direction = "ltr" if english else "rtl"
+    text_align = "left" if english else "justify"
+    text_justify_rule = "text-justify: inter-word;" if not english else ""
+    headings_align = "left" if english else "right"
+
+    # RTL vs LTR borders and paddings
+    if english:
+        h2_border_css = f"border-left: 4.5px solid {palette['h2_accent']}; padding-left: 12px;"
+        list_padding_css = "padding-left: 25px; padding-right: 0;"
+        table_cell_align = "left"
+        quote_border_css = f"border-left: 4px solid {palette['quote_border']};"
+        callout_border_css = "border-left: 4.5px solid;"
+    else:
+        h2_border_css = f"border-right: 4.5px solid {palette['h2_accent']}; padding-right: 12px;"
+        list_padding_css = "padding-right: 25px; padding-left: 0;"
+        table_cell_align = "right"
+        quote_border_css = f"border-right: 4px solid {palette['quote_border']};"
+        callout_border_css = "border-right: 4.5px solid;"
+
     css = f"""
-/* Google Fonts Import for Vazirmatn */
-@import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800;900&display=swap');
+/* Google Fonts Import for Inter & Vazirmatn */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Vazirmatn:wght@300;400;500;600;700;800;900&display=swap');
 
 @page {{
     size: {page_size};
@@ -151,9 +179,9 @@ body {{
     font-size: 10.5pt;
     line-height: 1.85;
     color: {palette['text_color']};
-    direction: rtl;
-    text-align: justify;
-    text-justify: inter-word;
+    direction: {direction};
+    text-align: {text_align};
+    {text_justify_rule}
     margin: 0;
     padding: 0;
     background-color: {palette['bg_color']};
@@ -165,8 +193,8 @@ body {{
 h1, h2, h3, h4, h5, h6 {{
     font-family: {font_stack};
     font-weight: 800;
-    direction: rtl;
-    text-align: right;
+    direction: {direction};
+    text-align: {headings_align};
     margin-top: 1.8em;
     margin-bottom: 0.6em;
     page-break-after: avoid;
@@ -184,8 +212,7 @@ h1 {{
 h2 {{
     font-size: 13.5pt;
     color: {palette['h2_color']};
-    border-right: 4.5px solid {palette['h2_accent']};
-    padding-right: 12px;
+    {h2_border_css}
     margin-top: 1.6em;
 }}
 
@@ -214,8 +241,7 @@ a {{
 
 /* Lists */
 ul, ol {{
-    padding-right: 25px;
-    padding-left: 0;
+    {list_padding_css}
     margin-bottom: 1em;
 }}
 
@@ -237,7 +263,7 @@ table {{
 th, td {{
     border: 1px solid {palette['table_border']};
     padding: 8px 12px;
-    text-align: right;
+    text-align: {table_cell_align};
     vertical-align: middle;
 }}
 
@@ -293,7 +319,7 @@ blockquote {{
     margin: 1.3em 0;
     padding: 10px 18px;
     background-color: {palette['quote_bg']};
-    border-right: 4px solid {palette['quote_border']};
+    {quote_border_css}
     color: {palette['quote_color']};
     border-radius: 4px;
 }}
@@ -337,6 +363,23 @@ img {{
     unicode-bidi: isolate;
 }}
 
+/* Mermaid Diagrams */
+.mermaid {{
+    direction: ltr !important;
+    text-align: center;
+    margin: 1.8em auto;
+    display: flex;
+    justify-content: center;
+    page-break-inside: avoid;
+    break-inside: avoid;
+}}
+
+.mermaid svg {{
+    max-width: 100% !important;
+    height: auto !important;
+    box-sizing: border-box;
+}}
+
 /* Callouts / Admonitions */
 .callout {{
     margin: 1.3em 0;
@@ -344,9 +387,9 @@ img {{
     border-radius: 6px;
     page-break-inside: avoid;
     break-inside: avoid;
-    border-right: 4.5px solid;
-    direction: rtl;
-    text-align: justify;
+    {callout_border_css}
+    direction: {direction};
+    text-align: {text_align};
 }}
 
 .callout-header {{

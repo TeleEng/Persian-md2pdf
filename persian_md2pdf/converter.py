@@ -1,7 +1,7 @@
 """
-Core Markdown-to-HTML conversion engine for Persian and RTL documents.
-Handles math equations (KaTeX), GitHub-style callouts, tables, code blocks,
-and Persian digits formatting.
+Core Markdown-to-HTML conversion engine for Persian RTL and English LTR documents.
+Handles math equations (KaTeX), Mermaid diagrams, GitHub-style callouts, tables,
+code blocks, and Persian digits formatting.
 """
 
 import re
@@ -27,6 +27,14 @@ CALLOUT_TITLES_FA = {
     "caution": "احتیاط",
 }
 
+CALLOUT_TITLES_EN = {
+    "note": "Note",
+    "tip": "Tip",
+    "important": "Important",
+    "warning": "Warning",
+    "caution": "Caution",
+}
+
 CALLOUT_ALIAS_MAP = {
     "note": "note",
     "نکته": "note",
@@ -49,10 +57,10 @@ PERSIAN_DIGITS_TRANS = str.maketrans("0123456789", "۰۱۲۳۴۵۶۷۸۹")
 def to_persian_numbers(text: str) -> str:
     """
     Converts Latin digits 0-9 into Persian digits ۰-۹,
-    carefully preserving HTML tags, URLs, math, and code blocks.
+    carefully preserving HTML tags, URLs, math, code blocks, and diagrams.
     """
-    # Regex splitting text into protected parts (HTML tags, pre/code tags, math) vs normal text
-    parts = re.split(r"(<[^>]+>|@@MATH[A-Z0-9_]+END@@|@@CALLOUT[A-Z0-9_]+END@@)", text)
+    # Regex splitting text into protected parts (HTML tags, pre/code tags, math, mermaid) vs normal text
+    parts = re.split(r"(<[^>]+>|@@MATH[A-Z0-9_]+END@@|@@CALLOUT[A-Z0-9_]+END@@|@@MERMAID[A-Z0-9_]+END@@)", text)
     in_code_block = False
 
     result = []
@@ -67,11 +75,11 @@ def to_persian_numbers(text: str) -> str:
             elif tag_name in ("/pre", "/code", "/script", "/style"):
                 in_code_block = False
             result.append(part)
-        elif part.startswith("@@MATH") or part.startswith("@@CALLOUT") or in_code_block:
+        elif part.startswith("@@MATH") or part.startswith("@@CALLOUT") or part.startswith("@@MERMAID") or in_code_block:
             # Leave protected tokens and code blocks as-is
             result.append(part)
         else:
-            # Regular Persian text node: convert digits
+            # Regular text node: convert digits
             result.append(part.translate(PERSIAN_DIGITS_TRANS))
 
     return "".join(result)
@@ -94,7 +102,7 @@ def extract_frontmatter(md_text: str) -> Tuple[Dict[str, str], str]:
     return meta, md_text
 
 
-def parse_callouts(md_text: str, callout_map: Dict[str, str]) -> str:
+def parse_callouts(md_text: str, callout_map: Dict[str, str], english: bool = False) -> str:
     """
     Preprocesses GitHub-style callouts:
     > [!NOTE]
@@ -106,6 +114,8 @@ def parse_callouts(md_text: str, callout_map: Dict[str, str]) -> str:
         r"((?:^[ ]*>.*(?:\n|$))+)",
         re.MULTILINE | re.IGNORECASE
     )
+
+    callout_titles = CALLOUT_TITLES_EN if english else CALLOUT_TITLES_FA
 
     def replace_callout(match):
         raw_type = match.group(1).lower()
@@ -122,7 +132,7 @@ def parse_callouts(md_text: str, callout_map: Dict[str, str]) -> str:
         # Convert inner markdown
         inner_html = markdown.markdown(inner_markdown, extensions=['tables', 'fenced_code', 'nl2br'])
 
-        title = CALLOUT_TITLES_FA.get(callout_type, callout_type.capitalize())
+        title = callout_titles.get(callout_type, callout_type.capitalize())
         icon = CALLOUT_ICONS.get(callout_type, CALLOUT_ICONS["note"])
 
         token = f"@@CALLOUTTOKEN{len(callout_map)}END@@"
@@ -141,29 +151,53 @@ def parse_callouts(md_text: str, callout_map: Dict[str, str]) -> str:
     return pattern.sub(replace_callout, md_text)
 
 
+def parse_mermaid(md_text: str, mermaid_map: Dict[str, str]) -> str:
+    """
+    Finds fenced ```mermaid or ~~~mermaid code blocks, protects them with tokens,
+    and formats them as <div class="mermaid"> containers.
+    """
+    pattern = re.compile(
+        r"^[ ]*(?:```|~~~)mermaid[ ]*\n([\s\S]+?)\n[ ]*(?:```|~~~)",
+        re.MULTILINE | re.IGNORECASE
+    )
+
+    def replace_mermaid(match):
+        diagram_code = match.group(1).strip()
+        token = f"@@MERMAIDTOKEN{len(mermaid_map)}END@@"
+        mermaid_html = f'<div class="mermaid">\n{diagram_code}\n</div>'
+        mermaid_map[token] = mermaid_html
+        return token + "\n\n"
+
+    return pattern.sub(replace_mermaid, md_text)
+
+
 def md_to_html(
     md_text: str,
     title: Optional[str] = None,
     theme: str = "modern",
-    font: str = "Vazirmatn",
+    font: Optional[str] = None,
     page_size: str = "A4",
     margins: str = "20mm 15mm 20mm 15mm",
     persian_numbers: bool = False,
     katex: bool = True,
+    mermaid: bool = True,
+    english: bool = False,
     custom_css: Optional[str] = None,
 ) -> str:
     """
-    Transforms Persian/RTL Markdown into a complete, publication-ready HTML document.
+    Transforms Persian/RTL or English/LTR Markdown into a complete, publication-ready HTML document.
 
     Args:
         md_text: Raw Markdown content.
         title: Document HTML title. Extracted automatically if None.
         theme: Theme name ('modern', 'academic', 'minimal', 'github').
-        font: Font family name (default 'Vazirmatn').
+        font: Font family name (defaults to 'Inter' for English, 'Vazirmatn' for Persian).
         page_size: Page format (e.g. 'A4', 'Letter').
         margins: CSS margin string (e.g. '20mm 15mm 20mm 15mm').
         persian_numbers: If True, convert Latin digits to Persian digits.
         katex: If True, include KaTeX math rendering engine.
+        mermaid: If True, support Mermaid diagram rendering.
+        english: If True, compile in English LTR layout.
         custom_css: Optional custom CSS rules to inject.
 
     Returns:
@@ -180,11 +214,15 @@ def md_to_html(
         if first_h1:
             title = first_h1.group(1).strip()
         else:
-            title = "سند فارسی"
+            title = "Document" if english else "سند فارسی"
 
-    # 2. Protect LaTeX Math
+    # 2. Protect Mermaid Diagrams
+    mermaid_map: Dict[str, str] = {}
+    if mermaid:
+        content = parse_mermaid(content, mermaid_map)
+
+    # 3. Protect LaTeX Math
     math_map: Dict[str, str] = {}
-
     if katex:
         def save_display_math(match):
             token = f"@@MATHDISPLAYTOKEN{len(math_map)}END@@"
@@ -203,11 +241,11 @@ def md_to_html(
         # Extract inline math $ ... $
         content = re.sub(r"(?<!\\)\$(?!\$)([^\$\n]+?)(?<!\\)\$", save_inline_math, content)
 
-    # 3. Parse Callouts / Admonitions
+    # 4. Parse Callouts / Admonitions
     callout_map: Dict[str, str] = {}
-    content = parse_callouts(content, callout_map)
+    content = parse_callouts(content, callout_map, english=english)
 
-    # 4. Convert Markdown to HTML
+    # 5. Convert Markdown to HTML
     md_parser = markdown.Markdown(extensions=[
         'tables',
         'fenced_code',
@@ -218,31 +256,38 @@ def md_to_html(
     ])
     html_body = md_parser.convert(content)
 
-    # 5. Restore Math & Callout Tokens
+    # 6. Restore Math, Mermaid & Callout Tokens
     for token, math_html in math_map.items():
         html_body = html_body.replace(f"<p>{token}</p>", math_html)
         html_body = html_body.replace(token, math_html)
 
+    for token, mermaid_html in mermaid_map.items():
+        html_body = html_body.replace(f"<p>{token}</p>", mermaid_html)
+        html_body = html_body.replace(token, mermaid_html)
+
     for token, callout_html in callout_map.items():
-        # Handle cases where markdown parser may wrap token in <p>...</p>
         html_body = html_body.replace(f"<p>{token}</p>", callout_html)
         html_body = html_body.replace(token, callout_html)
 
-    # 6. Apply Persian Numbers if enabled
-    if persian_numbers:
+    # 7. Apply Persian Numbers if explicitly enabled
+    if persian_numbers and not english:
+        html_body = to_persian_numbers(html_body)
+    elif persian_numbers and english:
+        # If user explicitly forced persian numbers on english
         html_body = to_persian_numbers(html_body)
 
-    # 7. Generate Theme Stylesheet
+    # 8. Generate Theme Stylesheet
     theme_css = get_theme_css(
         theme_name=theme,
         font_family=font,
         page_size=page_size,
         margins=margins,
         page_numbering=True,
+        english=english,
         custom_css=custom_css,
     )
 
-    # 8. KaTeX Scripts Injection
+    # 9. KaTeX Scripts Injection
     katex_scripts = ""
     if katex:
         katex_scripts = """
@@ -259,14 +304,38 @@ def md_to_html(
 </script>
 """
 
-    # 9. Assemble HTML Document
+    # 10. Mermaid Scripts Injection
+    mermaid_scripts = ""
+    if mermaid and (mermaid_map or "class=\"mermaid\"" in html_body):
+        mermaid_scripts = """
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        try {
+            mermaid.initialize({
+                startOnLoad: true,
+                theme: 'default',
+                securityLevel: 'loose'
+            });
+        } catch(e) {
+            console.error('Mermaid initialization error:', e);
+        }
+    });
+</script>
+"""
+
+    # 11. Assemble HTML Document
+    html_lang = "en" if english else "fa"
+    html_dir = "ltr" if english else "rtl"
+
     html_document = f"""<!DOCTYPE html>
-<html lang="fa" dir="rtl">
+<html lang="{html_lang}" dir="{html_dir}">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>{title}</title>
 {katex_scripts}
+{mermaid_scripts}
 <style>
 {theme_css}
 </style>

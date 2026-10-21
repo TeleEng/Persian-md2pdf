@@ -1,5 +1,6 @@
 """
 Command Line Interface (CLI) for persian-md2pdf.
+Supports both Persian RTL and English LTR Markdown to PDF conversion with KaTeX and Mermaid.
 """
 
 import os
@@ -23,8 +24,16 @@ if sys.platform.startswith("win"):
         pass
 
 
-def print_banner():
-    banner = f"""
+def print_banner(english: bool = False):
+    if english:
+        banner = f"""
+╔═════════════════════════════════════════════════════════════════╗
+║                   persian-md2pdf v{__version__:<30}║
+║        Professional Markdown to PDF Engine (English / LTR)      ║
+╚═════════════════════════════════════════════════════════════════╝
+"""
+    else:
+        banner = f"""
 ╔═════════════════════════════════════════════════════════════════╗
 ║                   persian-md2pdf v{__version__:<30}║
 ║        تبدیل حرفه‌ای فایل‌های مارک‌داون فارسی به پی‌دی‌اف        ║
@@ -37,9 +46,14 @@ def run_watch_mode(input_path: str, args):
     """
     Watches a markdown file or directory for modifications and automatically recompiles.
     """
-    print(f"[*] حالت تماشا (Watch Mode) فعال شد.")
-    print(f"[*] در حال نظارت بر تغییرات: {input_path}")
-    print("[*] برای خروج، کلید ترکیبی Ctrl+C را فشار دهید.\n")
+    if args.english:
+        print("[*] Watch Mode activated.")
+        print(f"[*] Watching for changes in: {input_path}")
+        print("[*] Press Ctrl+C to stop watching.\n")
+    else:
+        print("[*] حالت تماشا (Watch Mode) فعال شد.")
+        print(f"[*] در حال نظارت بر تغییرات: {input_path}")
+        print("[*] برای خروج، کلید ترکیبی Ctrl+C را فشار دهید.\n")
 
     def get_mtimes():
         if os.path.isfile(input_path):
@@ -70,37 +84,58 @@ def run_watch_mode(input_path: str, args):
             if changed:
                 last_mtimes = current_mtimes
                 timestamp = time.strftime("%H:%M:%S")
-                print(f"[{timestamp}] تغییرات شناسایی شد. در حال کامپایل مجدد...")
+                if args.english:
+                    print(f"[{timestamp}] Changes detected. Recompiling...")
+                else:
+                    print(f"[{timestamp}] تغییرات شناسایی شد. در حال کامپایل مجدد...")
                 try:
                     process_inputs([input_path], args, verbose=False)
-                    print(f"[{timestamp}] کامپایل با موفقیت انجام شد.\n")
+                    if args.english:
+                        print(f"[{timestamp}] Recompiled successfully.\n")
+                    else:
+                        print(f"[{timestamp}] کامپایل با موفقیت انجام شد.\n")
                 except Exception as e:
-                    print(f"[✗] خطا در کامپایل: {e}\n")
+                    if args.english:
+                        print(f"[✗] Compilation error: {e}\n")
+                    else:
+                        print(f"[✗] خطا در کامپایل: {e}\n")
     except KeyboardInterrupt:
-        print("\n[*] نظارت متوقف شد.")
+        if args.english:
+            print("\n[*] Watch stopped.")
+        else:
+            print("\n[*] نظارت متوقف شد.")
 
 
 def process_inputs(inputs: List[str], args, verbose: bool = True):
+    font_arg = args.font
+    # If font wasn't explicitly changed and user wants english, pass None so converter chooses Inter
+    if args.english and args.font == "Vazirmatn":
+        font_arg = None
+
     for target in inputs:
         if os.path.isdir(target):
             # Compile whole directory
             if verbose:
-                print(f"[*] در حال تبدیل پوشه: {target}")
+                msg = f"[*] Compiling directory: {target}" if args.english else f"[*] در حال تبدیل پوشه: {target}"
+                print(msg)
             compile_directory(
                 input_dir=target,
                 output_dir=args.output,
                 theme=args.theme,
-                font=args.font,
+                font=font_arg,
                 page_size=args.page_size,
                 margins=args.margins,
                 persian_numbers=args.persian_numbers,
                 katex=not args.no_katex,
+                mermaid=not args.no_mermaid,
+                english=args.english,
                 custom_css=args.css,
                 browser_path=args.browser,
                 keep_html=args.keep_html,
             )
             if verbose:
-                print(f"  [✓] تمام فایل‌های مارک‌داون پوشه با موفقیت تبدیل شدند.")
+                success_msg = "  [✓] All Markdown files compiled successfully." if args.english else "  [✓] تمام فایل‌های مارک‌داون پوشه با موفقیت تبدیل شدند."
+                print(success_msg)
         elif os.path.isfile(target):
             filename = os.path.basename(target)
             if args.html_only:
@@ -111,156 +146,181 @@ def process_inputs(inputs: List[str], args, verbose: bool = True):
                     out_html = os.path.join(out_html, os.path.splitext(filename)[0] + ".html")
 
                 if verbose:
-                    print(f"[*] ایجاد فایل HTML: {filename} -> {os.path.basename(out_html)} ...")
+                    msg = f"[*] Generating HTML: {filename} -> {os.path.basename(out_html)} ..." if args.english else f"[*] ایجاد فایل HTML: {filename} -> {os.path.basename(out_html)} ..."
+                    print(msg)
                 md2html(
                     input_source=target,
                     output_html=out_html,
                     theme=args.theme,
-                    font=args.font,
+                    font=font_arg,
                     page_size=args.page_size,
                     margins=args.margins,
                     persian_numbers=args.persian_numbers,
                     katex=not args.no_katex,
+                    mermaid=not args.no_mermaid,
+                    english=args.english,
                     custom_css=args.css,
                 )
                 if verbose:
-                    print(f"  [✓] فایل HTML با موفقیت ذخیره شد: {out_html}")
+                    success_msg = f"  [✓] HTML saved: {out_html}" if args.english else f"  [✓] فایل HTML با موفقیت ذخیره شد: {out_html}"
+                    print(success_msg)
             else:
                 out_pdf = args.output
                 if out_pdf and os.path.isdir(out_pdf):
                     out_pdf = os.path.join(out_pdf, os.path.splitext(filename)[0] + ".pdf")
 
                 if verbose:
-                    print(f"[*] در حال تبدیل: {filename} ...")
+                    msg = f"[*] Converting: {filename} ..." if args.english else f"[*] در حال تبدیل: {filename} ..."
+                    print(msg)
                 pdf_path = compile_file(
                     input_file=target,
                     output_pdf=out_pdf,
                     theme=args.theme,
-                    font=args.font,
+                    font=font_arg,
                     page_size=args.page_size,
                     margins=args.margins,
                     persian_numbers=args.persian_numbers,
                     katex=not args.no_katex,
+                    mermaid=not args.no_mermaid,
+                    english=args.english,
                     custom_css=args.css,
                     browser_path=args.browser,
                     keep_html=args.keep_html,
                 )
                 if verbose:
                     size_kb = os.path.getsize(pdf_path) / 1024.0
-                    print(f"  [✓] فایل PDF ساخته شد: {pdf_path} ({size_kb:.1f} KB)")
+                    success_msg = f"  [✓] PDF created: {pdf_path} ({size_kb:.1f} KB)" if args.english else f"  [✓] فایل PDF ساخته شد: {pdf_path} ({size_kb:.1f} KB)"
+                    print(success_msg)
         else:
-            print(f"[✗] خطا: مسیر یافت نشد: {target}", file=sys.stderr)
+            err_msg = f"[✗] Error: Path not found: {target}" if args.english else f"[✗] خطا: مسیر یافت نشد: {target}"
+            print(err_msg, file=sys.stderr)
 
 
 def main():
     parser = argparse.ArgumentParser(
         prog="persian-md2pdf",
-        description="تبدیل فایل‌های مارک‌داون فارسی به اسناد پی‌دی‌اف زیبا، استاندارد و راست‌چین با پشتیبانی از فرمول‌های ریاضی و کدهای برنامه‌نویسی.",
+        description="Convert Persian RTL and English LTR Markdown documents into elegant, publication-quality PDFs with LaTeX math and Mermaid diagrams.",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
-نمونه‌های استفاده:
+Examples / نمونه‌های استفاده:
   persian-md2pdf report.md
+  persian-md2pdf doc.md --english
   persian-md2pdf report.md -o output.pdf --theme academic
-  persian-md2pdf ./docs/ -o ./dist/
+  persian-md2pdf ./docs/ -o ./dist/ --english
   persian-md2pdf paper.md --persian-numbers --watch
-  persian-md2pdf guide.md --theme github --html-only
+  persian-md2pdf architecture.md --english --theme modern
 """,
     )
 
     parser.add_argument(
         "input",
         nargs="+",
-        help="مسیر فایل یا پوشه مارک‌داون (.md)",
+        help="Path to Markdown file(s) or directory / مسیر فایل یا پوشه مارک‌داون (.md)",
     )
     parser.add_argument(
         "-o", "--output",
         default=None,
-        help="مسیر فایل پی‌دی‌اف یا پوشه خروجی",
+        help="Output PDF path or directory / مسیر فایل پی‌دی‌اف یا پوشه خروجی",
+    )
+    parser.add_argument(
+        "--english", "--English", "-en",
+        dest="english",
+        action="store_true",
+        help="Compile in English LTR layout with Inter font and English callouts",
     )
     parser.add_argument(
         "-t", "--theme",
         default="modern",
         choices=AVAILABLE_THEMES,
-        help="قالب ظاهری سند (پیش‌فرض: modern)",
+        help="Theme / قالب ظاهری سند (default: modern)",
     )
     parser.add_argument(
         "-f", "--font",
         default="Vazirmatn",
-        help="نام فونت فارسی متن (پیش‌فرض: Vazirmatn)",
+        help="Font family name / نام فونت متن (default: Vazirmatn for Persian, Inter for English)",
     )
     parser.add_argument(
         "--page-size",
         default="A4",
-        help="اندازه صفحه (A4, Letter و ...) (پیش‌فرض: A4)",
+        help="Page format / اندازه صفحه (A4, Letter, etc.) (default: A4)",
     )
     parser.add_argument(
         "--margins",
         default="20mm 15mm 20mm 15mm",
-        help="فاصله‌های حاشیه صفحه (بالا راست پایین چپ) (پیش‌فرض: 20mm 15mm 20mm 15mm)",
+        help="Page margins (top right bottom left) / فاصله‌های حاشیه صفحه (default: 20mm 15mm 20mm 15mm)",
     )
     parser.add_argument(
         "--persian-numbers",
         action="store_true",
-        help="تبدیل اعداد انگلیسی به ارقام فارسی در متن گزارش",
+        help="Convert Latin digits (0-9) to Persian digits (۰-۹)",
     )
     parser.add_argument(
         "--no-katex",
         action="store_true",
-        help="غیرفعال‌سازی پردازش فرمول‌های ریاضی LaTeX",
+        help="Disable KaTeX LaTeX math processing / غیرفعال‌سازی فرمول‌های ریاضی",
+    )
+    parser.add_argument(
+        "--no-mermaid",
+        action="store_true",
+        help="Disable Mermaid diagram rendering / غیرفعال‌سازی نمودارهای Mermaid",
     )
     parser.add_argument(
         "--html-only",
         action="store_true",
-        help="تنها تولید فایل HTML بدون تبدیل به PDF",
+        help="Generate only HTML output / تنها تولید فایل HTML بدون تبدیل به PDF",
     )
     parser.add_argument(
         "--keep-html",
         action="store_true",
-        help="نگه‌داشتن فایل موقت HTML در کنار فایل PDF خروجی",
+        help="Keep temporary HTML alongside the PDF / نگه‌داشتن فایل HTML در کنار PDF",
     )
     parser.add_argument(
         "--css",
         default=None,
-        help="مسیر فایل استایل سفارشی CSS برای تغییر ظاهر سند",
+        help="Path to custom CSS file / مسیر فایل استایل سفارشی CSS",
     )
     parser.add_argument(
         "--browser",
         default=None,
-        help="مسیر دستی به فایل اجرایی مرورگر Chrome یا Edge",
+        help="Custom browser executable path / مسیر دستی به مرورگر Chrome یا Edge",
     )
     parser.add_argument(
         "-w", "--watch",
         action="store_true",
-        help="نظارت خودکار بر فایل و کامپایل مجدد با هر ذخیره‌سازی",
+        help="Watch file and recompile automatically on save / نظارت خودکار بر فایل",
     )
     parser.add_argument(
         "-v", "--version",
         action="version",
         version=f"%(prog)s {__version__}",
-        help="نمایش نسخه برنامه",
+        help="Show version / نمایش نسخه برنامه",
     )
 
     args = parser.parse_args()
 
     # If --watch is requested, enter watch loop
     if args.watch:
-        print_banner()
+        print_banner(english=args.english)
         if len(args.input) > 1:
-            print("[!] در حالت watch تنها اولین مسیر نظارت می‌شود.")
+            warn = "[!] In watch mode, only the first input path is monitored." if args.english else "[!] در حالت watch تنها اولین مسیر نظارت می‌شود."
+            print(warn)
         run_watch_mode(args.input[0], args)
         return
 
     # Normal conversion
-    print_banner()
+    print_banner(english=args.english)
     try:
         browser_info = find_browser(args.browser)
-        print(f"[*] مرورگر شناسایی‌شده: {os.path.basename(browser_info)}")
+        msg = f"[*] Detected browser: {os.path.basename(browser_info)}" if args.english else f"[*] مرورگر شناسایی‌شده: {os.path.basename(browser_info)}"
+        print(msg)
     except Exception as e:
         if not args.html_only:
-            print(f"[!] هشدار مرورگر: {e}", file=sys.stderr)
+            warn = f"[!] Browser warning: {e}" if args.english else f"[!] هشدار مرورگر: {e}"
+            print(warn, file=sys.stderr)
 
     process_inputs(args.input, args, verbose=True)
-    print("\n[✓] عملیات با موفقیت پایان یافت.")
+    finish_msg = "\n[✓] All operations completed successfully." if args.english else "\n[✓] عملیات با موفقیت پایان یافت."
+    print(finish_msg)
 
 
 if __name__ == "__main__":

@@ -1,5 +1,5 @@
 """
-Core interface for compiling Persian Markdown files and directories into PDFs.
+Core interface for compiling Persian and English Markdown files and directories into PDFs.
 """
 
 import os
@@ -16,11 +16,13 @@ def compile_file(
     output_pdf: Optional[str] = None,
     title: Optional[str] = None,
     theme: str = "modern",
-    font: str = "Vazirmatn",
+    font: Optional[str] = None,
     page_size: str = "A4",
     margins: str = "20mm 15mm 20mm 15mm",
     persian_numbers: bool = False,
     katex: bool = True,
+    mermaid: bool = True,
+    english: bool = False,
     custom_css: Optional[str] = None,
     browser_path: Optional[str] = None,
     keep_html: bool = False,
@@ -34,15 +36,17 @@ def compile_file(
         output_pdf: Path to destination .pdf file. Defaults to same name as input.
         title: Document title (defaults to frontmatter or heading or filename).
         theme: Theme name ('modern', 'academic', 'minimal', 'github').
-        font: Persian font family name (default 'Vazirmatn').
+        font: Font family name (defaults to 'Inter' for English, 'Vazirmatn' for Persian).
         page_size: 'A4' or 'Letter'.
         margins: CSS margin format, e.g. '20mm 15mm 20mm 15mm'.
         persian_numbers: Whether to translate 0-9 to ۰-۹.
         katex: Whether to render LaTeX math via KaTeX.
+        mermaid: Whether to render Mermaid diagrams.
+        english: If True, compile in English LTR layout.
         custom_css: Additional CSS text or path to a .css file.
         browser_path: Custom path to browser executable.
         keep_html: If True, saves intermediate .html file next to the PDF.
-        virtual_time_budget: Milliseconds for KaTeX and font rendering.
+        virtual_time_budget: Milliseconds for KaTeX, Mermaid, and font rendering.
 
     Returns:
         str: Absolute path to the generated PDF.
@@ -76,6 +80,8 @@ def compile_file(
         margins=margins,
         persian_numbers=persian_numbers,
         katex=katex,
+        mermaid=mermaid,
+        english=english,
         custom_css=custom_css,
     )
 
@@ -128,11 +134,13 @@ def md2html(
     output_html: Optional[str] = None,
     title: Optional[str] = None,
     theme: str = "modern",
-    font: str = "Vazirmatn",
+    font: Optional[str] = None,
     page_size: str = "A4",
     margins: str = "20mm 15mm 20mm 15mm",
     persian_numbers: bool = False,
     katex: bool = True,
+    mermaid: bool = True,
+    english: bool = False,
     custom_css: Optional[str] = None,
 ) -> str:
     """
@@ -165,6 +173,8 @@ def md2html(
         margins=margins,
         persian_numbers=persian_numbers,
         katex=katex,
+        mermaid=mermaid,
+        english=english,
         custom_css=custom_css,
     )
 

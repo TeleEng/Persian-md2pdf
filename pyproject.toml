@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "persian-md2pdf"
-version = "1.0.0"
-description = "Professional tool and Python library for converting Persian and RTL Markdown documents to PDF with KaTeX math and elegant typography."
+version = "1.1.0"
+description = "Professional tool and Python library for converting Persian RTL and English LTR Markdown documents to PDF with KaTeX math, Mermaid diagrams, and elegant typography."
 readme = "README.md"
 requires-python = ">=3.8"
 license = { text = "MIT" }
