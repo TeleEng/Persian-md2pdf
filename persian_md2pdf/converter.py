@@ -85,6 +85,35 @@ def to_persian_numbers(text: str) -> str:
     return "".join(result)
 
 
+def fix_persian_ezafe(text: str) -> str:
+    """
+    Refines Persian ezafe (هٔ / ۀ) by replacing oversized Unicode hamza above
+    with a properly scaled, vertically aligned superscript hamza.
+    """
+    parts = re.split(r"(<[^>]+>|@@MATH[A-Z0-9_]+END@@|@@CALLOUT[A-Z0-9_]+END@@|@@MERMAID[A-Z0-9_]+END@@)", text)
+    in_code_block = False
+
+    result = []
+    for part in parts:
+        if not part:
+            continue
+        if part.startswith("<"):
+            tag_name = part.strip("<>").split()[0].lower() if part.strip("<>").split() else ""
+            if tag_name in ("pre", "code", "script", "style"):
+                in_code_block = True
+            elif tag_name in ("/pre", "/code", "/script", "/style"):
+                in_code_block = False
+            result.append(part)
+        elif part.startswith("@@MATH") or part.startswith("@@CALLOUT") or part.startswith("@@MERMAID") or in_code_block:
+            result.append(part)
+        else:
+            fixed = part.replace("\u0647\u0654", 'ه<span class="ezafe-hamza">ء</span>')
+            fixed = fixed.replace("\u06c0", 'ه<span class="ezafe-hamza">ء</span>')
+            result.append(fixed)
+
+    return "".join(result)
+
+
 def extract_frontmatter(md_text: str) -> Tuple[Dict[str, str], str]:
     """
     Extracts simple YAML frontmatter (key: value) if present at top of markdown document.
@@ -271,7 +300,11 @@ def md_to_html(
         html_body = html_body.replace(f"<p>{token}</p>", callout_html)
         html_body = html_body.replace(token, callout_html)
 
-    # 7. Apply Persian Numbers if explicitly enabled
+    # 7. Refine Persian Ezafe (هٔ / ۀ) to prevent oversized hamza
+    if not english:
+        html_body = fix_persian_ezafe(html_body)
+
+    # 8. Apply Persian Numbers if explicitly enabled
     if persian_numbers and not english:
         html_body = to_persian_numbers(html_body)
     elif persian_numbers and english:

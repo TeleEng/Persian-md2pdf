@@ -405,6 +405,17 @@ img {{
     line-height: 1.35 !important;
 }}
 
+/* Refined Persian Ezafe Hamza (prevents giant floating hamza on هٔ) */
+.ezafe-hamza {{
+    font-size: 0.44em !important;
+    vertical-align: 0.65em !important;
+    margin-right: -0.22em !important;
+    line-height: 0 !important;
+    display: inline-block !important;
+    font-weight: 700 !important;
+    opacity: 0.95;
+}}
+
 /* Callouts / Admonitions */
 .callout {{
     margin: 1.3em 0;
